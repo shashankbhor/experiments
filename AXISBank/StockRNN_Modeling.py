@@ -166,12 +166,14 @@ modelDisct={}
 
 
 # Model -1 : Adaptive Learing rate - Adam 
-for layer in np.arange(3,7):
-    for epoch in np.arange(40,100,20):
-        tensorboard2 = TensorBoard(log_dir="logs/{}".format(time()))
-        adamLearningRateModel=buildModel(input_shape=(X_train_ds.shape[1], features),lstm_layers=layer,pred_size=10)
-        adamLearningRateModel.fit(X_train_ds, y_train_ds, epochs = epoch, batch_size = 40,  verbose=1, callbacks=[tensorboard2])
-        modelDisct['adam-l:'+str(layer)+"e:"+str(epoch)]=adamLearningRateModel
+optimizer='adam'
+for layer in np.arange(4,5):
+    for epoch in np.arange(80,100,20):
+        modelNm=optimizer+'_layer_'+str(layer)+".epochs_"+str(epoch)
+        tensorboard2 = TensorBoard(log_dir="logs/{}".format(modelNm))
+        regModel=buildModel(input_shape=(X_train_ds.shape[1], features),optimizer=optimizer,lstm_layers=layer,pred_size=10)
+        regModel.fit(X_train_ds, y_train_ds, epochs = epoch, batch_size = 40,  verbose=1, callbacks=[tensorboard2])
+        modelDisct[modelNm]=regModel
 
 # Model Storage 
 from sklearn.externals import joblib
@@ -207,8 +209,14 @@ modelResults={}
 for model in modelDisct.keys():
     modelResults[model]=sc_y.inverse_transform(modelDisct.get(model).predict(X_test))
 
-predicted_stock_price = rmspropLearningRateModel.predict(X_test)
-predicted_stock_price = sc_y.inverse_transform(predicted_stock_price)
+#predicted_stock_price = rmspropLearningRateModel.predict(X_test)
+#predicted_stock_price = sc_y.inverse_transform(predicted_stock_price)
+
+'''
+testPredictPlot = numpy.empty_like(X_test)
+testPredictPlot[:, :] = numpy.nan
+testPredictPlot[len(pred_size)+(timesteps*2)+1:len(X_test)-1, :] = predicted_stock_price
+'''
 
 from scipy.ndimage.filters import gaussian_filter1d
 for model in modelDisct.keys():
@@ -227,6 +235,8 @@ for model in modelDisct.keys():
     plt.ylabel(stock_cd+' Stock Price')
     plt.legend()
     plt.show()
+
+    
 
 
     
